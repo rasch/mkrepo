@@ -33,7 +33,7 @@ mkrepo mpvd '🎹 run mpv as a daemon with an API similar to mpc'
 
 ```sh
 # download script
-curl -LO https://git.sr.ht/~rasch/mkrepo/blob/main/mkrepo
+curl -O https://git.sr.ht/~rasch/mkrepo/blob/main/mkrepo
 
 # make it executable
 chmod +x mkrepo
