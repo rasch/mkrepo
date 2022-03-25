@@ -1,5 +1,7 @@
 # mkrepo
 
+[![builds.sr.ht status](https://builds.sr.ht/~rasch/mkrepo.svg)](https://builds.sr.ht/~rasch/mkrepo?)
+
 Initialize a Git repository in the current working directory and
 remotely on [Sourcehut], [Codeberg], [GitHub] and [GitLab] 🌱
 
