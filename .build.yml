@@ -2,7 +2,7 @@ image: alpine/latest
 packages:
   - shellcheck
 sources:
-  - https://git.sr.ht/~rasch/mkrepo#main
+  - https://git.sr.ht/~rasch/mkrepo
 tasks:
   - lint: |
-    shellcheck mkrepo/mkrepo
+      shellcheck mkrepo/mkrepo
