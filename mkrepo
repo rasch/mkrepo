@@ -1,0 +1,166 @@
+#!/bin/sh
+
+repo="${1:?repository name required}"
+description="${2:?repository description required}"
+visibility="${3:-public}"
+private=false
+exit_code=0
+
+# validate `$repo` name
+if ! printf '%s' "$repo" | grep -Eq '^[a-z0-9][a-z0-9-]*$'; then
+  echo 'ERROR: repo name should only contain lowercase letters (a-z),
+       numbers (0-9) or dashes (-) and must not begin with a dash'
+  exit 1
+fi
+
+# validate repo `$visibility`
+if ! test "$visibility" = public -o "$visibility" = private; then
+  echo 'ERROR: visibility must be either public or private'
+  exit 1
+fi
+
+# set `$private` to `true` if `$visibility` isn't `public`
+test "$visibility" = public || private=true
+
+# set default git user
+username="${GIT_USER:-$(whoami)}"
+
+# remote git usernames - override `$GIT_USER` with environment variables
+codeberg_user="${CODEBERG_USER:-$username}"
+github_user="${GITHUB_USER:-$username}"
+gitlab_user="${GITLAB_USER:-$username}"
+sourcehut_user="${SOURCEHUT_USER:-$username}"
+
+# remote repository URLs
+codeberg_url="git@codeberg.org:$codeberg_user/$repo.git"
+github_url="git@github.com:$github_user/$repo.git"
+gitlab_url="git@gitlab.com:$gitlab_user/$repo.git"
+sourcehut_url="git@git.sr.ht:~$sourcehut_user/$repo"
+
+codeberg_http="https://codeberg.org/$codeberg_user/$repo"
+github_http="https://github.com/$github_user/$repo"
+gitlab_http="https://gitlab.com/$gitlab_user/$repo"
+
+# create empty repository on codeberg.org
+codeberg() {
+  status=$(curl -s -o /dev/null \
+    -w "%{http_code}" \
+    -X POST \
+    -H 'Accept: application/json' \
+    -H 'Content-Type: application/json' \
+    "https://codeberg.org/api/v1/user/repos?access_token=$CODEBERG_TOKEN" \
+    -d "{\"name\":\"$repo\",\"description\":\"$description\",\"private\":$private}")
+
+  case "$status" in
+    201) echo "Repo created at $codeberg_http"
+         git remote add codeberg "$codeberg_url"
+         git push codeberg
+         ;;
+    409) error_msg="Repo already exists at $codeberg_http" ;;
+    422) error_msg="Validation Error" ;;
+      *) error_msg="Undocumented Status Code" ;;
+  esac
+
+  if test -n "$error_msg"; then
+    echo "ERROR [$status] $error_msg" >&2
+    exit_code=$((exit_code + 1))
+    unset error_msg
+  fi
+}
+
+# create empty repository on github.com
+github() {
+  status=$(curl -s -o /dev/null \
+    -w "%{http_code}" \
+    -X POST \
+    -H "Accept: application/vnd.github.v3+json" \
+    -H 'Content-Type: application/json' \
+    -u "$github_user:$GITHUB_TOKEN" \
+    "https://api.github.com/user/repos" \
+    -d "{\"name\":\"$repo\",\"description\":\"$description\",\"private\":$private}")
+
+  case "$status" in
+    201) echo "Repo created at $github_http"
+         git remote add github "$github_url"
+         git push github
+         ;;
+    400) error_msg="Bad Request" ;;
+    401) error_msg="Unauthorized" ;;
+    403) error_msg="Forbidden" ;;
+    404) error_msg="Not Found" ;;
+    422) error_msg="Validation Error" ;;
+      *) error_msg="Undocumented Status Code" ;;
+  esac
+
+  if test -n "$error_msg"; then
+    echo "ERROR [$status] $error_msg" >&2
+    exit_code=$((exit_code + 1))
+    unset error_msg
+  fi
+}
+
+# create empty repository on gitlab.com
+gitlab() {
+  status=$(curl -s -o /dev/null \
+    -w "%{http_code}" \
+    -X POST \
+    -H 'Accept: application/json' \
+    -H 'Content-Type: application/json' \
+    "https://gitlab.com/api/v4/projects?private_token=$GITLAB_TOKEN" \
+    -d "{\"name\":\"$repo\",\"description\":\"$description\",\"visibility\":\"$visibility\"}")
+
+  case "$status" in
+    201) echo "Repo created at $gitlab_http"
+         git remote add gitlab "$gitlab_url"
+         git push gitlab
+         ;;
+    400) error_msg="Bad Request" ;;
+    401) error_msg="Unauthorized" ;;
+    403) error_msg="Forbidden" ;;
+    404) error_msg="Not Found" ;;
+    405) error_msg="Method Not Allowed" ;;
+    409) error_msg="Conflict - Repo may already exist at $gitlab_http" ;;
+    412) error_msg="Request Denied" ;;
+    422) error_msg="Validation Error" ;;
+    429) error_msg="Too Many Requests" ;;
+    500) error_msg="Server Error" ;;
+      *) error_msg="Undocumented Status Code" ;;
+  esac
+
+  if test -n "$error_msg"; then
+    echo "ERROR [$status] $error_msg" >&2
+    exit_code=$((exit_code + 1))
+    unset error_msg
+  fi
+}
+
+sourcehut() {
+  git remote add sourcehut "$sourcehut_url"
+
+  git push \
+    --push-option=description="$description" \
+    --push-option=visibility="$visibility" \
+    --set-upstream sourcehut
+}
+
+init_repo() {
+  git init "$repo"
+  cd "$repo" || { echo "ERROR: 'cd $repo' failed"; exit 1; }
+  echo "$description" > .git/description
+  touch README.md
+  git add README.md
+  git commit -m '🎉 Initial commit'
+}
+
+main() {
+  init_repo
+
+  test -z "$SOURCEHUT_DISABLE" && sourcehut
+  test -n "$CODEBERG_TOKEN" && codeberg
+  test -n "$GITHUB_TOKEN" && github
+  test -n "$GITLAB_TOKEN" && gitlab
+
+  exit "$exit_code"
+}
+
+main
