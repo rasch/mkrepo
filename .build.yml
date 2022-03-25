@@ -1,0 +1,8 @@
+image: alpine/latest
+packages:
+  - shellcheck
+sources:
+  - https://git.sr.ht/~rasch/mkrepo#main
+tasks:
+  - lint: |
+    shellcheck mkrepo/mkrepo
