@@ -7,9 +7,10 @@ private=false
 exit_code=0
 
 # validate `$repo` name
-if ! printf '%s' "$repo" | grep -Eq '^[a-z0-9][a-z0-9-]*$'; then
+if ! printf '%s' "$repo" | grep -Eq '^[a-z0-9.][a-z0-9.-]*$'; then
   echo 'ERROR: repo name should only contain lowercase letters (a-z),
-       numbers (0-9) or dashes (-) and must not begin with a dash'
+       numbers (0-9), periods (.) or dashes (-) and must not begin
+       with a dash'
   exit 1
 fi
 
