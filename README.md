@@ -8,7 +8,7 @@ remotely on [Sourcehut], [Codeberg], [GitHub] and [GitLab] 🌱
 ## Usage
 
 ```txt
-mkrepo <name> <description> [private]
+mkrepo <name> <description> [private] [branch]
 ```
 
 - `<name>` (required) Name of the local and remote repository. It must
@@ -22,6 +22,10 @@ mkrepo <name> <description> [private]
 
 - `[private]` (optional) Set visibility of project to one of 'private'
   or 'public'. Projects are public by default.
+
+- `[branch]` (optional) Set branch of project to something other than
+  the default (`main`). This option is only used with [Sourcehut] for
+  creating repositories on push.
 
 ## Examples
 

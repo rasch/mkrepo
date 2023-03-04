@@ -3,6 +3,7 @@
 repo="${1:?repository name required}"
 description="${2:?repository description required}"
 visibility="${3:-public}"
+branch="${4:-main}"
 private=false
 exit_code=0
 
@@ -141,7 +142,7 @@ sourcehut() {
   git push \
     --push-option=description="$description" \
     --push-option=visibility="$visibility" \
-    --set-upstream sourcehut
+    --set-upstream sourcehut "$branch"
 }
 
 init_repo() {
