@@ -72,7 +72,7 @@ Instead of pushing to each remote individully it may be helpful to
 create a git alias in the git configuration.
 
 ```sh
-git config --global alias.pushall '!for r in $(git remote); do git push --all "$r"; done'
+git config --global alias.remotes-push '!git remote | xargs -I% -n1 git push %'
 ```
 
 ## What does `mkrepo` actually do?
