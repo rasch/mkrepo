@@ -149,9 +149,7 @@ init_repo() {
   git init "$repo"
   cd "$repo" || { echo "ERROR: 'cd $repo' failed"; exit 1; }
   echo "$description" > .git/description
-  touch README.md
-  git add README.md
-  git commit -m '🎉 Initial commit'
+  git commit --allow-empty -m '🎉 Initial commit'
 }
 
 main() {

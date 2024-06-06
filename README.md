@@ -79,8 +79,7 @@ git config --global alias.remotes-push '!git remote | xargs -I% -n1 git push %'
 
 - initialize git repository (`git init <reponame>`)
 - change directory into repository (`cd <reponame>`)
-- create README.md (`touch README.md` and `git add README.md`)
-- initial commit (`git commit -m '🎉 Initial commit'`)
+- initial empty commit (`git commit --allow-empty -m '🎉 Initial commit'`)
 - add remotes for sourcehut, codeberg, github and gitlab (`git remote
   add <remote> <url>`)
 - push to Sourcehut and set as upstream (Sourcehut supports creating new
